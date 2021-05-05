@@ -55,42 +55,42 @@ main(int argc, char **argv) {
 		} else if ((chosen = IORegistryEntryFromPath(kIOMasterPortDefault, kIODeviceTreePlane ":/chosen")) != IO_OBJECT_NULL) {
 			if ((hash = IORegistryEntryCreateCFProperty(chosen, CFSTR("crypto-hash-method"), kCFAllocatorDefault, kNilOptions)) != NULL) {
 				if (CFGetTypeID(hash) == CFDataGetTypeID()) {
-					crypto_hash_method = CFStringCreateFromExternalRepresentation(NULL, hash, kCFStringEncodingUTF8);
-					if (CFStringCompare(crypto_hash_method, CFSTR("sha1\0"), 0) == kCFCompareEqualTo) {
-						entangled_nonce = (uint8_t*)malloc(CC_SHA1_DIGEST_LENGTH * sizeof(uint8_t));
-					} else if (CFStringCompare(crypto_hash_method, CFSTR("sha2-384\0"), 0) == kCFCompareEqualTo) {
-						entangled_nonce = (uint8_t*)malloc(CC_SHA384_DIGEST_LENGTH * sizeof(uint8_t));
+					if ((crypto_hash_method = CFStringCreateFromExternalRepresentation(NULL, hash, kCFStringEncodingUTF8)) != NULL) {
+						if (CFStringCompare(crypto_hash_method, CFSTR("sha1\0"), 0) == kCFCompareEqualTo) {
+							entangled_nonce = (uint8_t*)malloc(CC_SHA1_DIGEST_LENGTH * sizeof(uint8_t));
+						} else if (CFStringCompare(crypto_hash_method, CFSTR("sha2-384\0"), 0) == kCFCompareEqualTo) {
+							entangled_nonce = (uint8_t*)malloc(CC_SHA384_DIGEST_LENGTH * sizeof(uint8_t));
+						}
 					}
 				}
 				CFRelease(hash);
 			}
 			IOObjectRelease(chosen);
 		}
-		if(dimentio(&nonce, argc == 2, entangled_nonce, &entangled) == KERN_SUCCESS) {
+		if(entangled_nonce != NULL && dimentio(&nonce, argc == 2, entangled_nonce, &entangled) == KERN_SUCCESS) {
 			if(argc == 1) {
 				printf("Current nonce is 0x%016" PRIX64 "\n", nonce);
 			} else {
 				printf("Set nonce to 0x%016" PRIX64 "\n", nonce);
 			}
-			if (entangled_nonce != NULL) {
-				if(entangled) {
-					printf("entangled_apnonce: ");
-				} else {
-					printf("apnonce: ");
+			if(entangled) {
+				printf("entangled_apnonce: ");
+				for (i = 0; i < MIN(CC_SHA384_DIGEST_LENGTH, 32); ++i) {
+					printf("%02" PRIX8, entangled_nonce[i]);
 				}
+			} else {
+				printf("apnonce: ");
 				if (CFStringCompare(crypto_hash_method, CFSTR("sha1\0"), 0) == kCFCompareEqualTo) {
 					for (i = 0; i < CC_SHA1_DIGEST_LENGTH; ++i) {
 						printf("%02" PRIX8, entangled_nonce[i]);
 					}
-				} else {
-					for (i = 0; i < MIN(CC_SHA384_DIGEST_LENGTH, 32); ++i) {
-						printf("%02" PRIX8, entangled_nonce[i]);
-					}
+				} else for (i = 0; i < MIN(CC_SHA384_DIGEST_LENGTH, 32); ++i) {
+					printf("%02" PRIX8, entangled_nonce[i]);
 				}
-				putchar('\n');
-				CFRelease(crypto_hash_method);
-				free(entangled_nonce);
 			}
+			putchar('\n');
+			CFRelease(crypto_hash_method);
+			free(entangled_nonce);
 			ret = 0;
 		}
 		dimentio_term();

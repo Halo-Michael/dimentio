@@ -1013,7 +1013,7 @@ sync_nonce(io_registry_entry_t nvram_entry) {
 }
 
 static bool
-entangle_nonce(uint64_t nonce, uint8_t entangled_nonce[CC_SHA384_DIGEST_LENGTH]) {
+entangle_nonce(uint64_t nonce, uint8_t *entangled_nonce) {
 	struct {
 		uint32_t generated, key_id, key_sz, val[4], key[4], zero, pad;
 	} key;
@@ -1052,7 +1052,7 @@ entangle_nonce(uint64_t nonce, uint8_t entangled_nonce[CC_SHA384_DIGEST_LENGTH])
 	} else {
 		if (CFStringCompare(crypto_hash_method, CFSTR("sha1\0"), 0) == kCFCompareEqualTo) {
 			CC_SHA1(&nonce, sizeof(nonce), entangled_nonce);
-		} else if (CFStringCompare(crypto_hash_method, CFSTR("sha2-384\0"), 0) == kCFCompareEqualTo) {
+		} else {
 			CC_SHA384(&nonce, sizeof(nonce), entangled_nonce);
 		}
 	}
@@ -1126,7 +1126,7 @@ dimentio_init(kaddr_t _kslide, kread_func_t _kread_buf, kwrite_func_t _kwrite_bu
 }
 
 kern_return_t
-dimentio(uint64_t *nonce, bool set, uint8_t entangled_nonce[CC_SHA384_DIGEST_LENGTH], bool *entangled) {
+dimentio(uint64_t *nonce, bool set, uint8_t *entangled_nonce, bool *entangled) {
 	io_registry_entry_t nvram_entry = IORegistryEntryFromPath(kIOMasterPortDefault, kIODeviceTreePlane ":/options");
 	char nonce_hex[2 * sizeof(*nonce) + sizeof("0x")];
 	kaddr_t of_dict, os_string, string_ptr;
