@@ -161,7 +161,6 @@ mach_vm_machine_attribute(vm_map_t, mach_vm_address_t, mach_vm_size_t, vm_machin
 extern const mach_port_t kIOMasterPortDefault;
 
 static int kmem_fd = -1;
-static unsigned t1sz_boot;
 static void *krw_0, *kernrw_0;
 static kread_func_t kread_buf;
 static task_t tfp0 = TASK_NULL;
@@ -1018,14 +1017,11 @@ entangle_nonce(uint64_t nonce, uint8_t entangled_nonce[CC_SHA384_DIGEST_LENGTH])
 	struct {
 		uint32_t generated, key_id, key_sz, val[4], key[4], zero, pad;
 	} key;
-	CFStringRef crypto_hash_method;
 	uint64_t buf[] = { 0, nonce };
 	kaddr_t aes_object, keys_ptr;
-	io_registry_entry_t chosen;
 	io_service_t aes_serv;
 	uint32_t key_cnt;
 	bool ret = false;
-	CFDataRef hash;
 	size_t out_sz;
 
 	if(t1sz_boot != 0) {
@@ -1054,20 +1050,10 @@ entangle_nonce(uint64_t nonce, uint8_t entangled_nonce[CC_SHA384_DIGEST_LENGTH])
 			IOObjectRelease(aes_serv);
 		}
 	} else {
-		if ((chosen = IORegistryEntryFromPath(kIOMasterPortDefault, kIODeviceTreePlane ":/chosen")) != IO_OBJECT_NULL) {
-			if ((hash = IORegistryEntryCreateCFProperty(chosen, CFSTR("crypto-hash-method"), kCFAllocatorDefault, kNilOptions)) != NULL) {
-				if (CFGetTypeID(hash) == CFDataGetTypeID()) {
-					crypto_hash_method = CFStringCreateFromExternalRepresentation(NULL, hash, kCFStringEncodingUTF8);
-					if (CFStringCompare(crypto_hash_method, CFSTR("sha1\0"), 0) == kCFCompareEqualTo) {
-						CC_SHA1(&nonce, sizeof(nonce), entangled_nonce);
-					} else if (CFStringCompare(crypto_hash_method, CFSTR("sha2-384\0"), 0) == kCFCompareEqualTo) {
-						CC_SHA384(&nonce, sizeof(nonce), entangled_nonce);
-					}
-					CFRelease(crypto_hash_method);
-				}
-				CFRelease(hash);
-			}
-			IOObjectRelease(chosen);
+		if (CFStringCompare(crypto_hash_method, CFSTR("sha1\0"), 0) == kCFCompareEqualTo) {
+			CC_SHA1(&nonce, sizeof(nonce), entangled_nonce);
+		} else if (CFStringCompare(crypto_hash_method, CFSTR("sha2-384\0"), 0) == kCFCompareEqualTo) {
+			CC_SHA384(&nonce, sizeof(nonce), entangled_nonce);
 		}
 	}
 	return ret;
