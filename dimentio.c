@@ -26,6 +26,9 @@ typedef uint32_t IOOptionBits;
 typedef mach_port_t io_object_t;
 typedef io_object_t io_registry_entry_t;
 
+CFStringRef crypto_hash_method;
+unsigned t1sz_boot;
+
 kern_return_t
 IOObjectRelease(io_object_t);
 

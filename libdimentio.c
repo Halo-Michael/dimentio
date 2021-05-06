@@ -158,6 +158,9 @@ mach_vm_read_overwrite(vm_map_t, mach_vm_address_t, mach_vm_size_t, mach_vm_addr
 kern_return_t
 mach_vm_machine_attribute(vm_map_t, mach_vm_address_t, mach_vm_size_t, vm_machine_attribute_t, vm_machine_attribute_val_t *);
 
+CFStringRef crypto_hash_method;
+unsigned t1sz_boot;
+
 extern const mach_port_t kIOMasterPortDefault;
 
 static int kmem_fd = -1;

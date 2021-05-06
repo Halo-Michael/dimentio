@@ -20,8 +20,8 @@
 typedef uint64_t kaddr_t;
 typedef kern_return_t (*kread_func_t)(kaddr_t, void *, size_t), (*kwrite_func_t)(kaddr_t, const void *, size_t);
 
-static unsigned t1sz_boot;
-static CFStringRef crypto_hash_method;
+extern unsigned t1sz_boot;
+extern CFStringRef crypto_hash_method;
 
 void
 dimentio_term(void);
